@@ -1,14 +1,16 @@
 package main
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"fmt"
-	"github.com/droundy/goopt"
-	"github.com/google/go-github/github"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"strings"
+
+	"code.google.com/p/goauth2/oauth"
+	"github.com/droundy/goopt"
+	"github.com/google/go-github/github"
 )
 
 var (
@@ -29,14 +31,12 @@ func main() {
 	goopt.Parse(nil)
 
 	if len(strings.TrimSpace(*file)) == 0 {
-		fmt.Fprintln(os.Stderr, "Please specify a valid file with -f or --file")
-		return
+		log.Fatalln("Please specify a valid file with -f or --file")
 	}
 
 	bytes, err := ioutil.ReadFile(*file)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Invalid file specified; %v\n", err)
-		return
+		log.Fatalln("Invalid file specified;", err)
 	}
 	content := string(bytes)
 
@@ -69,8 +69,7 @@ func main() {
 
 	gist, _, err := client.Gists.Create(input)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to create gist: %v", err)
-		return
+		log.Fatalln("Unable to create gist:", err)
 	}
 
 	fmt.Println("Done!")
