@@ -22,7 +22,7 @@ var (
 
 func main() {
 	goopt.Description = func() string {
-		return "A simple command line implementation for easily creating Gists for Github."
+		return "A simple command line utility for easily creating Gists for Github."
 	}
 	goopt.Version = VERSION
 	goopt.Summary = "Creates Gists from the command line."
@@ -30,6 +30,7 @@ func main() {
 
 	if len(strings.TrimSpace(*file)) == 0 {
 		fmt.Print("Please specify a valid file with -f or --file")
+		return
 	}
 
 	if _, err := os.Stat(*file); os.IsNotExist(err) {
