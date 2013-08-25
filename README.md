@@ -1,7 +1,11 @@
-## Gost
+### Gost
 ***
 Gost is a small command line utility written in Go. It is the result of me being frustrated (and lazy) with having to leave my terminal to create gists on Github.
 
+It does two things:
+
+1. Uploads a specified file as a new Gist.
+2. Returns the resulting URL.
 
 
 ### Installation
