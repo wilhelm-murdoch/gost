@@ -70,6 +70,7 @@ func main() {
 	gist, _, err := client.Gists.Create(input)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to create gist: %v", err)
+		return
 	}
 
 	fmt.Println("Done!")
