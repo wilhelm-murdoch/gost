@@ -11,14 +11,14 @@ It does two things:
 ### Installation
 You'll have to compile this on your own, so make sure you have the Go compiler installed on your machine. This utility was written with version `1.1.2` and it might work with earlier versions, though I have not tested it yet.
 
-1. Clone into your `$GOPATH\src` directory.
+1. Clone into your `$GOPATH/src` directory.
 2. Fetch all external dependancies with `go get -v`
 3. Navigate into the `$GOPATH/src/github.com/wilhelm-murdoch/gost` directory and run `go install`
 
 If all went well, the executable should now reside within `$GOPATH/bin`. If you want it available throughout your system, just add `$GOPATH/bin` to your systems' `$PATH`.
 
 ### Setup
-Gost will create gists for your anonymously out of the box. However, if you want to pair your Github account with your gists, you'll will first have to grab a personal API token from Github. You can get one of those [from here](https://github.com/settings/applications).
+Gost will create gists for you anonymously out of the box. However, if you want to pair your Github account with your gists, you'll first have to grab a personal API token from Github. You can get one of those [from here](https://github.com/settings/applications).
 
 Then, you will have to do one of the following:
 
@@ -40,7 +40,7 @@ Options:
   -d   --description=  Optional description of your new Gist.
   -P   --public        Make this Gist public.
   -p   --private       Make this Gist private. (default)
-       --help          show usage message
+       --help          Show usage message.
 ```
 
 ### Examples

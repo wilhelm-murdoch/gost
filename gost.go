@@ -1,14 +1,16 @@
 package main
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"fmt"
-	goopt "github.com/droundy/goopt"
-	"github.com/google/go-github/github"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"strings"
+
+	"code.google.com/p/goauth2/oauth"
+	"github.com/droundy/goopt"
+	"github.com/google/go-github/github"
 )
 
 var (
@@ -29,23 +31,14 @@ func main() {
 	goopt.Parse(nil)
 
 	if len(strings.TrimSpace(*file)) == 0 {
-		fmt.Print("Please specify a valid file with -f or --file")
-		return
-	}
-
-	if _, err := os.Stat(*file); os.IsNotExist(err) {
-		fmt.Printf("No such file: %s", *file)
-		return
+		log.Fatalln("Please specify a valid file with -f or --file")
 	}
 
 	bytes, err := ioutil.ReadFile(*file)
-
-	content := string(bytes)
-
 	if err != nil {
-		fmt.Printf("Invalid file specified: %s", *file)
-		return
+		log.Fatalln("Invalid file specified;", err)
 	}
+	content := string(bytes)
 
 	if len(strings.TrimSpace(*name)) == 0 {
 		*name = path.Base(*file)
@@ -64,22 +57,21 @@ func main() {
 		client = github.NewClient(t.Client())
 	}
 
-	input := new(github.Gist)
-	input.Description = description
-	input.Public = public
-	input.Files = map[github.GistFilename]github.GistFile{
-		github.GistFilename(*name): github.GistFile{Content: &content},
+	input := &github.Gist{
+		Description: description,
+		Public:      public,
+		Files: map[github.GistFilename]github.GistFile{
+			github.GistFilename(*name): github.GistFile{Content: &content},
+		},
 	}
 
 	fmt.Print("Gosting Gist ... ")
 
 	gist, _, err := client.Gists.Create(input)
-
 	if err != nil {
-		panic(err)
+		log.Fatalln("Unable to create gist:", err)
 	}
 
-	fmt.Print("Done!")
-	fmt.Println("")
-	fmt.Printf("Gist URL: %s", string(*gist.HTMLURL))
+	fmt.Println("Done!")
+	fmt.Println("Gist URL:", string(*gist.HTMLURL))
 }
