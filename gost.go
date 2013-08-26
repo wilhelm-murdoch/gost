@@ -7,14 +7,13 @@ import (
 	"os"
 	"path"
 	"strings"
-
 	"code.google.com/p/goauth2/oauth"
 	"github.com/droundy/goopt"
 	"github.com/google/go-github/github"
 )
 
 var (
-	VERSION     = "1.0.0"
+	VERSION     = "1.0.1"
 	token       = goopt.String([]string{"-t", "--token"}, "", "Optional Github API authentication token. If excluded, your Gist will be created anonymously.")
 	file        = goopt.String([]string{"-f", "--file"}, "", "Create a Gist from this file.")
 	name        = goopt.String([]string{"-n", "--name"}, "", "Optional name of your new Gist.")
