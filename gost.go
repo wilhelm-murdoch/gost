@@ -1,15 +1,15 @@
 package main
 
 import (
+	"code.google.com/p/goauth2/oauth"
 	"fmt"
+	"github.com/droundy/goopt"
+	"github.com/google/go-github/github"
 	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"strings"
-	"code.google.com/p/goauth2/oauth"
-	"github.com/droundy/goopt"
-	"github.com/google/go-github/github"
 )
 
 var (
