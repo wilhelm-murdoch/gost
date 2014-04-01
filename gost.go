@@ -3,64 +3,98 @@ package main
 import (
 	"code.google.com/p/goauth2/oauth"
 	"fmt"
-	"github.com/droundy/goopt"
+	"github.com/atotto/clipboard"
+	"github.com/docopt/docopt.go"
 	"github.com/google/go-github/github"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strings"
 )
 
 var (
-	VERSION     = "1.0.1"
-	token       = goopt.String([]string{"-t", "--token"}, "", "Optional Github API authentication token. If excluded, your Gist will be created anonymously.")
-	file        = goopt.String([]string{"-f", "--file"}, "", "Create a Gist from this file.")
-	name        = goopt.String([]string{"-n", "--name"}, "", "Optional name of your new Gist.")
-	description = goopt.String([]string{"-d", "--description"}, "", "Optional description of your new Gist.")
-	public      = goopt.Flag([]string{"-P", "--public"}, []string{"-p", "--private"}, "Make this Gist public.", "Make this Gist private. (default)")
+	version = "Gost 1.1.1"
+	usage   = `Gost - A simple command line utility for easily creating Gists for Github
+
+        Usage:
+         gost (--file=<file>|--clip) [--name=<name>|--description=<description>|--token=<token>|--public]
+         gost --help
+         gost --version
+
+        Options:
+          -t --token=<token>             Optional Github API authentication token. If excluded, your Gist will be created anonymously.
+          -f --file=<file>               Create a Gist from file.
+          -n --name=<name>               Optional name for your new Gist.
+          -d --description=<description> Optional description for your new Gist.
+          -c --clip                      Create a Gist from the contents of your clipboard.
+          -p --public                    Make this Gist public [default: false].
+          -h --help                      Will display this help screen.
+          -v --version                   Displays the current version of Gost.`
 )
 
 func main() {
-	goopt.Description = func() string {
-		return "A simple command line utility for easily creating Gists for Github."
-	}
-	goopt.Version = VERSION
-	goopt.Summary = "Creates Gists from the command line."
-	goopt.Parse(nil)
+	arguments, err := docopt.Parse(usage, nil, true, version, false)
 
-	if len(strings.TrimSpace(*file)) == 0 {
-		log.Fatalln("Please specify a valid file with -f or --file")
-	}
-
-	bytes, err := ioutil.ReadFile(*file)
 	if err != nil {
-		log.Fatalln("Invalid file specified;", err)
-	}
-	content := string(bytes)
-
-	if len(strings.TrimSpace(*name)) == 0 {
-		*name = path.Base(*file)
+		fmt.Println("Could not properly execute command; exiting ...")
+		os.Exit(1)
 	}
 
-	if len(strings.TrimSpace(*token)) == 0 {
-		*token = os.Getenv("GOST")
+	file := arguments["--file"]
+	content := ""
+	if file == nil {
+		if arguments["--clip"] == false {
+			fmt.Println("Please specify a valid file with -f or --file, or add something to your clipboard.")
+			os.Exit(1)
+		}
+
+		content, err = clipboard.ReadAll()
+
+		if err != nil {
+			fmt.Println("Error reading clipboard; exiting ...")
+			os.Exit(1)
+		}
+
+		if len(strings.TrimSpace(content)) == 0 {
+			fmt.Println("Your clipboard is empty; exiting ...")
+			os.Exit(1)
+		}
+	} else {
+		bytes, err := ioutil.ReadFile(file.(string))
+		if err != nil {
+			fmt.Println("Invalid file specified;", err)
+			os.Exit(1)
+		}
+		content = string(bytes)
+	}
+
+	name := arguments["--name"]
+	if name == nil && arguments["--file"] != nil {
+		name = path.Base(file.(string))
+	}
+
+	token := arguments["--token"]
+	if token == nil {
+		token = os.Getenv("GOST")
 	}
 
 	client := github.NewClient(nil)
-	if len(strings.TrimSpace(*token)) > 0 {
+	if len(strings.TrimSpace(token.(string))) > 0 {
 		t := &oauth.Transport{
-			Token: &oauth.Token{AccessToken: *token},
+			Token: &oauth.Token{AccessToken: token.(string)},
 		}
 
 		client = github.NewClient(t.Client())
 	}
 
+	description := arguments["--description"]
+	public := arguments["--public"]
+
 	input := &github.Gist{
-		Description: description,
-		Public:      public,
+		Description: &description,
+		Public:      &public,
 		Files: map[github.GistFilename]github.GistFile{
-			github.GistFilename(*name): github.GistFile{Content: &content},
+			github.GistFilename(name.(string)): github.GistFile{Content: &content},
 		},
 	}
 
@@ -68,9 +102,11 @@ func main() {
 
 	gist, _, err := client.Gists.Create(input)
 	if err != nil {
-		log.Fatalln("Unable to create gist:", err)
+		fmt.Println("Unable to create gist:", err)
+		os.Exit(1)
 	}
 
 	fmt.Println("Done!")
 	fmt.Println("Gist URL:", string(*gist.HTMLURL))
+	os.Exit(0)
 }
