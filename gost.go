@@ -69,8 +69,12 @@ func main() {
 	}
 
 	name := arguments["--name"]
-	if name == nil && arguments["--file"] != nil {
-		name = path.Base(file.(string))
+	if name == nil {
+		if arguments["--file"] != nil {
+			name = path.Base(file.(string))
+		} else {
+			name = ":)"
+		}
 	}
 
 	token := arguments["--token"]
@@ -88,7 +92,11 @@ func main() {
 	}
 
 	description := arguments["--description"]
-	public := arguments["--public"]
+	if description == nil {
+		description = ""
+	}
+
+	public := arguments["--public"].(bool)
 
 	input := &github.Gist{
 		Description: &description,
@@ -98,7 +106,7 @@ func main() {
 		},
 	}
 
-	fmt.Print("Gosting Gist ... ")
+	fmt.Println("Gosting Gist ... ")
 
 	gist, _, err := client.Gists.Create(input)
 	if err != nil {
