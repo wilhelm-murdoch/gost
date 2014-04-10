@@ -1,15 +1,16 @@
 package main
 
 import (
-	"code.google.com/p/goauth2/oauth"
 	"fmt"
-	"github.com/atotto/clipboard"
-	"github.com/docopt/docopt.go"
-	"github.com/google/go-github/github"
 	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"code.google.com/p/goauth2/oauth"
+	"github.com/atotto/clipboard"
+	"github.com/docopt/docopt.go"
+	"github.com/google/go-github/github"
 )
 
 var (
@@ -73,7 +74,7 @@ func main() {
 		if arguments["--file"] != nil {
 			name = path.Base(file.(string))
 		} else {
-			name = ":)"
+			name = "gistfile"
 		}
 	}
 
@@ -98,8 +99,10 @@ func main() {
 
 	public := arguments["--public"].(bool)
 
+	desc := description.(string)
+
 	input := &github.Gist{
-		Description: &description,
+		Description: &desc,
 		Public:      &public,
 		Files: map[github.GistFilename]github.GistFile{
 			github.GistFilename(name.(string)): github.GistFile{Content: &content},
