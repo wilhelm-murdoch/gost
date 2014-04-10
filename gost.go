@@ -18,9 +18,8 @@ var (
 	usage   = `Gost - A simple command line utility for easily creating Gists for Github
 
         Usage:
-         gost (--file=<file>|--clip) [--name=<name>|--description=<description>|--token=<token>|--public]
-         gost --help
-         gost --version
+         gost (--file=<file> | --clip) [--name=<name>] [--description=<description>] [--token=<token>] [--public]
+         gost (--help | --version)
 
         Options:
           -t --token=<token>             Optional Github API authentication token. If excluded, your Gist will be created anonymously.

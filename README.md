@@ -4,7 +4,7 @@ Gost is a small command line utility written in Go. It is the result of me being
 
 It does two things:
 
-1. Uploads a specified file as a new Gist.
+1. Uploads a specified file, or the contents of your clipboard, as a new Gist.
 2. Returns the resulting URL.
 
 
@@ -30,17 +30,21 @@ Then, you will have to do one of the following:
 You can find usage documentation with the following command:
 
 ```
-$: gost --help
-Usage of gost:
-    Creates Gists from the command line.
+Gost - A simple command line utility for easily creating Gists for Github
+
+Usage:
+ gost (--file=<file> | --clip) [--name=<name>] [--description=<description>] [--token=<token>] [--public]
+ gost (--help | --version)
+
 Options:
-  -t   --token=        Optional Github API authentication token. If excluded, your Gist will be created anonymously.
-  -f   --file=         Create a Gist from this file.
-  -n   --name=         Optional name of your new Gist.
-  -d   --description=  Optional description of your new Gist.
-  -P   --public        Make this Gist public.
-  -p   --private       Make this Gist private. (default)
-       --help          Show usage message.
+  -t --token=<token>             Optional Github API authentication token. If excluded, your Gist will be created anonymously.
+  -f --file=<file>               Create a Gist from file.
+  -n --name=<name>               Optional name for your new Gist.
+  -d --description=<description> Optional description for your new Gist.
+  -c --clip                      Create a Gist from the contents of your clipboard.
+  -p --public                    Make this Gist public [default: false].
+  -h --help                      Will display this help screen.
+  -v --version                   Displays the current version of Gost.
 ```
 
 ### Examples
@@ -48,7 +52,7 @@ Options:
 Create a private gist:
 
 ```
-$: gost -f /path/to/by/file.txt
+$: gost --file /path/to/by/file.txt
 Gosting Gist ... Done!
 Gist URL: https://gist.github.com/234234232
 ```
@@ -56,7 +60,7 @@ Gist URL: https://gist.github.com/234234232
 Create a public gist:
 
 ```
-$: gost -f /path/to/by/file.txt -P
+$: gost --file /path/to/by/file.txt --public
 Gosting Gist ... Done!
 Gist URL: https://gist.github.com/234234232
 ```
@@ -64,15 +68,16 @@ Gist URL: https://gist.github.com/234234232
 Create a public gist with a custom name and description:
 
 ```
-$: gost -f /path/to/by/file.txt -P -n 'My Gosted Gist' -d 'This is quite handy!'
+$: gost --file /path/to/by/file.txt --public --name 'My Gosted Gist' --description 'This is quite handy!'
 Gosting Gist ... Done!
 Gist URL: https://gist.github.com/234234232
 ```
 
-### Todo
+Create a gist from the contents of your clipboard:
 
-1. Add tests
-2. Add LICENSE
-3. Seriously clean up
-4. Add support for directory uploads
-5. Better error handling
+```
+$: gost --clip
+Gosting Gist ... Done!
+Gist URL: https://gist.github.com/234234232
+
+```
