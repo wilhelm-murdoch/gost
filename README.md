@@ -30,6 +30,7 @@ Then, you will have to do one of the following:
 You can find usage documentation with the following command:
 
 ```
+$: gost --help
 Gost - A simple command line utility for easily creating Gists for Github
 
 Usage:
