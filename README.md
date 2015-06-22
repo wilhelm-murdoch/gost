@@ -9,6 +9,12 @@ It does two things:
 
 
 ### Installation
+#### Homebrew
+```
+brew install gost
+```
+
+#### Manual
 You'll have to compile this on your own, so make sure you have the Go compiler installed on your machine. This utility was written with version `1.2` and it might work with earlier versions, though I have not tested it yet.
 
 1. Clone into your `$GOPATH/src` directory.
