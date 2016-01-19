@@ -18,7 +18,7 @@ var (
 	usage   = `Gost - A simple command line utility for easily creating Gists for Github
 
         Usage:
-         gost (--file=<file> | --clip) [--name=<name>] [--description=<description>] [--token=<token>] [--public]
+         gost [--file=<file>] [--clip] [--name=<name>] [--description=<description>] [--token=<token>] [--public] [--paste]
          gost (--help | --version)
 
         Options:
@@ -28,6 +28,7 @@ var (
           -d --description=<description> Optional description for your new Gist.
           -c --clip                      Create a Gist from the contents of your clipboard.
           -p --public                    Make this Gist public [default: false].
+		  -P --paste                     Will paste your latest gist to stdout and local clipboard.
           -h --help                      Will display this help screen.
           -v --version                   Displays the current version of Gost.`
 )
@@ -42,7 +43,25 @@ func main() {
 
 	file := arguments["--file"]
 	content := ""
-	if file == nil {
+
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		fmt.Println("Cannot read from Stdin;", err)
+		os.Exit(1)
+	}
+
+	if fi.Mode()&os.ModeNamedPipe != 0 {
+		stdin, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			fmt.Println("Cannot read from Stdin;", err)
+		}
+
+		content = string(stdin)
+		if len(strings.TrimSpace(content)) == 0 {
+			fmt.Println("Stdin is empty; exiting ...")
+			os.Exit(1)
+		}
+	} else if file == nil {
 		if arguments["--clip"] == false {
 			fmt.Println("Please specify a valid file with -f or --file, or add something to your clipboard.")
 			os.Exit(1)
