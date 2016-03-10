@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,7 +15,7 @@ import (
 )
 
 var (
-	version = "Gost 1.1.1"
+	version = "Gost 1.2.0"
 	usage   = `Gost - A simple command line utility for easily creating Gists for Github
 
         Usage:
@@ -28,10 +29,43 @@ var (
           -d --description=<description> Optional description for your new Gist.
           -c --clip                      Create a Gist from the contents of your clipboard.
           -p --public                    Make this Gist public [default: false].
-		  -P --paste                     Will paste your latest gist to stdout and local clipboard.
+	  -P --paste                     Will paste your latest gist to stdout and local clipboard.
           -h --help                      Will display this help screen.
           -v --version                   Displays the current version of Gost.`
 )
+
+func contentFromFile(file interface{}) (string, error) {
+	fmt.Print(file)
+	fmt.Print("...")
+	bytes, err := ioutil.ReadFile(file.(string))
+	if err != nil {
+		return "", errors.New("Invalid file specified")
+	}
+
+	return string(bytes), nil
+}
+
+func contentFromStdin() (string, error) {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return "", errors.New("Cannot read from Stdin")
+	}
+
+	if fi.Mode()&os.ModeNamedPipe != 0 {
+		stdin, err := ioutil.ReadAll(os.Stdin)
+		if err != nil {
+			return "", errors.New("Cannot read from Stdin")
+		}
+
+		return string(stdin), nil
+	}
+
+	return "", nil
+}
+
+func contentFromClip() (string, error) {
+	return clipboard.ReadAll()
+}
 
 func main() {
 	arguments, err := docopt.Parse(usage, nil, true, version, false)
@@ -42,49 +76,25 @@ func main() {
 	}
 
 	file := arguments["--file"]
-	content := ""
 
-	fi, err := os.Stdin.Stat()
+	var content string
+	switch {
+	case len(file.(string)) > 0:
+		content, err = contentFromFile(file)
+	case arguments["--clip"]:
+		content, err = contentFromClip()
+	default:
+		content, err = contentFromStdin()
+	}
+
 	if err != nil {
-		fmt.Println("Cannot read from Stdin;", err)
+		fmt.Println(err, "; exiting ...")
 		os.Exit(1)
 	}
 
-	if fi.Mode()&os.ModeNamedPipe != 0 {
-		stdin, err := ioutil.ReadAll(os.Stdin)
-		if err != nil {
-			fmt.Println("Cannot read from Stdin;", err)
-		}
-
-		content = string(stdin)
-		if len(strings.TrimSpace(content)) == 0 {
-			fmt.Println("Stdin is empty; exiting ...")
-			os.Exit(1)
-		}
-	} else if file == nil {
-		if arguments["--clip"] == false {
-			fmt.Println("Please specify a valid file with -f or --file, or add something to your clipboard.")
-			os.Exit(1)
-		}
-
-		content, err = clipboard.ReadAll()
-
-		if err != nil {
-			fmt.Println("Error reading clipboard; exiting ...")
-			os.Exit(1)
-		}
-
-		if len(strings.TrimSpace(content)) == 0 {
-			fmt.Println("Your clipboard is empty; exiting ...")
-			os.Exit(1)
-		}
-	} else {
-		bytes, err := ioutil.ReadFile(file.(string))
-		if err != nil {
-			fmt.Println("Invalid file specified;", err)
-			os.Exit(1)
-		}
-		content = string(bytes)
+	if len(strings.TrimSpace(content)) == 0 {
+		fmt.Println("No content to gost; exiting ...")
+		os.Exit(1)
 	}
 
 	name := arguments["--name"]
@@ -116,7 +126,6 @@ func main() {
 	}
 
 	public := arguments["--public"].(bool)
-
 	desc := description.(string)
 
 	input := &github.Gist{
@@ -128,7 +137,8 @@ func main() {
 	}
 
 	fmt.Println("Gosting Gist ... ")
-
+	fmt.Print(content)
+	os.Exit(0)
 	gist, _, err := client.Gists.Create(input)
 	if err != nil {
 		fmt.Println("Unable to create gist:", err)
