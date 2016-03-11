@@ -33,7 +33,7 @@ var (
           -v --version                   Displays the current version of Gost.`
 )
 
-const DEFAULT_GIST_NAME = "gostfile"
+const defaultGistName = "gostfile"
 
 func contentFromFile(file interface{}) (string, string, error) {
 	bytes, err := ioutil.ReadFile(file.(string))
@@ -58,7 +58,7 @@ func contentFromStdin() (string, string, error) {
 			return "", "", errors.New("Cannot read from Stdin")
 		}
 
-		return string(stdin), DEFAULT_GIST_NAME, nil
+		return string(stdin), defaultGistName, nil
 	}
 
 	return "", "", nil
@@ -66,7 +66,7 @@ func contentFromStdin() (string, string, error) {
 
 func contentFromClip() (string, string, error) {
 	content, err := clipboard.ReadAll()
-	return content, DEFAULT_GIST_NAME, err
+	return content, defaultGistName, err
 }
 
 func main() {
