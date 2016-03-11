@@ -8,10 +8,10 @@ import (
 	"path"
 	"strings"
 
-	"code.google.com/p/goauth2/oauth"
 	"github.com/atotto/clipboard"
 	"github.com/docopt/docopt.go"
 	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -29,42 +29,44 @@ var (
           -d --description=<description> Optional description for your new Gist.
           -c --clip                      Create a Gist from the contents of your clipboard.
           -p --public                    Make this Gist public [default: false].
-	  -P --paste                     Will paste your latest gist to stdout and local clipboard.
           -h --help                      Will display this help screen.
           -v --version                   Displays the current version of Gost.`
 )
 
-func contentFromFile(file interface{}) (string, error) {
-	fmt.Print(file)
-	fmt.Print("...")
+const DEFAULT_GIST_NAME = "gostfile"
+
+func contentFromFile(file interface{}) (string, string, error) {
 	bytes, err := ioutil.ReadFile(file.(string))
 	if err != nil {
-		return "", errors.New("Invalid file specified")
+		return "", "", errors.New("Invalid file specified")
 	}
 
-	return string(bytes), nil
+	name := path.Base(file.(string))
+
+	return string(bytes), name, nil
 }
 
-func contentFromStdin() (string, error) {
+func contentFromStdin() (string, string, error) {
 	fi, err := os.Stdin.Stat()
 	if err != nil {
-		return "", errors.New("Cannot read from Stdin")
+		return "", "", errors.New("Cannot read from Stdin")
 	}
 
 	if fi.Mode()&os.ModeNamedPipe != 0 {
 		stdin, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			return "", errors.New("Cannot read from Stdin")
+			return "", "", errors.New("Cannot read from Stdin")
 		}
 
-		return string(stdin), nil
+		return string(stdin), DEFAULT_GIST_NAME, nil
 	}
 
-	return "", nil
+	return "", "", nil
 }
 
-func contentFromClip() (string, error) {
-	return clipboard.ReadAll()
+func contentFromClip() (string, string, error) {
+	content, err := clipboard.ReadAll()
+	return content, DEFAULT_GIST_NAME, err
 }
 
 func main() {
@@ -75,16 +77,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	file := arguments["--file"]
-
+	var file string
+	var name string
 	var content string
+
 	switch {
-	case len(file.(string)) > 0:
-		content, err = contentFromFile(file)
+	case arguments["--file"] != nil:
+		file = arguments["--file"].(string)
+		content, name, err = contentFromFile(file)
 	case arguments["--clip"]:
-		content, err = contentFromClip()
+		content, name, err = contentFromClip()
 	default:
-		content, err = contentFromStdin()
+		content, name, err = contentFromStdin()
 	}
 
 	if err != nil {
@@ -97,13 +101,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	name := arguments["--name"]
-	if name == nil {
-		if arguments["--file"] != nil {
-			name = path.Base(file.(string))
-		} else {
-			name = "gistfile"
-		}
+	if arguments["--name"] != nil {
+		name = arguments["--name"].(string)
 	}
 
 	token := arguments["--token"]
@@ -111,13 +110,15 @@ func main() {
 		token = os.Getenv("GOST")
 	}
 
-	client := github.NewClient(nil)
+	ghc := github.NewClient(nil)
 	if len(strings.TrimSpace(token.(string))) > 0 {
-		t := &oauth.Transport{
-			Token: &oauth.Token{AccessToken: token.(string)},
-		}
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: token.(string)},
+		)
 
-		client = github.NewClient(t.Client())
+		ghc = github.NewClient(
+			oauth2.NewClient(oauth2.NoContext, ts),
+		)
 	}
 
 	description := arguments["--description"]
@@ -132,14 +133,13 @@ func main() {
 		Description: &desc,
 		Public:      &public,
 		Files: map[github.GistFilename]github.GistFile{
-			github.GistFilename(name.(string)): github.GistFile{Content: &content},
+			github.GistFilename(name): github.GistFile{Content: &content},
 		},
 	}
 
 	fmt.Println("Gosting Gist ... ")
-	fmt.Print(content)
-	os.Exit(0)
-	gist, _, err := client.Gists.Create(input)
+
+	gist, _, err := ghc.Gists.Create(input)
 	if err != nil {
 		fmt.Println("Unable to create gist:", err)
 		os.Exit(1)

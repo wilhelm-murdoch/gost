@@ -4,18 +4,12 @@ Gost is a small command line utility written in Go. It is the result of me being
 
 It does two things:
 
-1. Uploads a specified file, or the contents of your clipboard, as a new Gist.
+1. Uploads a specified file, contents of your clipboard, or piped input as a new Gist.
 2. Returns the resulting URL.
 
-
 ### Installation
-#### Homebrew
-```
-brew install gost
-```
 
-#### Manual
-You'll have to compile this on your own, so make sure you have the Go compiler installed on your machine. This utility was written with version `1.2` and it might work with earlier versions, though I have not tested it yet.
+You'll have to compile this on your own, so make sure you have the Go compiler installed on your machine. This utility was written with version `1.6` and should work with prior releases of Go.
 
 1. Clone into your `$GOPATH/src` directory.
 2. Fetch all external dependancies with `go get -v`
@@ -86,5 +80,12 @@ Create a gist from the contents of your clipboard:
 $: gost --clip
 Gosting Gist ... Done!
 Gist URL: https://gist.github.com/234234232
+```
 
+Create a gist from command line stdin pipe:
+
+```
+$: date | gost
+Gosting Gist ... Done!
+Gist URL: https://gist.github.com/234234232
 ```
